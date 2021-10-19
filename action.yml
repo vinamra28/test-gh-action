@@ -1,13 +1,13 @@
-name: 'Hello World sample'
-description: 'Greet someone and record the time'
+name: 'Hello India: my country Sample'
+description: 'Greet someone and record the time and place'
 inputs:
   who-to-greet:  # id of input
     description: 'Who to greet'
     required: true
-    default: 'World'
+    default: 'India'
 outputs:
   time: # id of output
-    description: 'The time we greeted you'
+    description: 'The time and place we greeted you'
 runs:
   using: 'node12'
   main: 'index.js'
