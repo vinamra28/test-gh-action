@@ -11,6 +11,8 @@
     "url": "git+https://github.com/Divyansh42/hello-world-javascript-action.git"
   },
   "keywords": [],
+  "activationEvents": [],
+  "contributors": [],
   "author": "",
   "license": "ISC",
   "bugs": {
