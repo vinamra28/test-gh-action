@@ -1,47 +1,44 @@
-on: [push]
+on: [ push ]
+
+env:
+  IMAGE_NAME: hello-world
+  TAGS: latest v1
 
 jobs:
-  hello_world_job:
+  test_s2i:
     runs-on: ubuntu-latest
     name: A job to install s2i
     steps:
-      - name: Hello world action step
-        id: hello
-        uses: actions/hello-world-javascript-action@v1.1
+      # Checkout hello-world repository for testing
+      - name: Checkout application
+        uses: actions/checkout@v2
         with:
-          who-to-greet: "Mona the Octocat"
-      # Use the output from the `hello` step
-      # - name: Get the output time
-      #   run: echo "The time was ${{ steps.hello.outputs.time }}"
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v1
-        with:
-          version: latest
-      - name: Run Hello World
-        run: docker run hello-world
-      # - uses: actions/checkout@master
-      # - name: setup-go
-      #   uses: actions/setup-go@v1
-      #   with:
-      #     go-version: "1.14.10" # The Go version to download (if necessary) and use.
-      # - name: Test go
-      #   run: echo $(go version)
+          repository: 'go-training/helloworld'
+
+      # Install s2i
       - name: Install s2i
-        # run: GO111MODULE=on go get github.com/openshift/source-to-image/cmd/s2i@master
+        uses: redhat-actions/openshift-tools-installer@v1
+        with:
+          source: github
+          s2i: latest
+
+      - name: Test s2i version
+        run: s2i version
+
+        # Build container image
+      - name: Build
+        id: build_image
+        uses: redhat-actions/s2i-build@v1
+        with:
+          builder_image: 'registry.access.redhat.com/devtools/go-toolset-rhel7'
+          image: ${{ env.IMAGE_NAME }}
+          tags: ${{ env.TAGS }}
+
+      - name: Echo Outputs
         run: |
-          curl -Lfs -o source-to-image-v1.3.1-a5a77147-linux-amd64.tar.gz https://github.com/openshift/source-to-image/releases/download/v1.3.1/source-to-image-v1.3.1-a5a77147-linux-amd64.tar.gz
-          sudo tar -xzf source-to-image-v1.3.1-a5a77147-linux-amd64.tar.gz
-          sudo mv s2i /usr/local/bin/
-          s2i version
-      - name: Test s2i
-        run: sudo echo $(s2i version)
-      # - run: |
-      #     go version
-      #     echo "Hello from go"
-      #     echo ${GOPATH}
-      #     go get github.com/openshift/source-to-image
-      #     cd ${GOPATH}/src/github.com/openshift/source-to-image
-      #     export PATH=$PATH:${GOPATH}/src/github.com/openshift/source-to-image/_output/local/bin/linux/amd64/
-      #     hack/build-go.sh
-      #     s2i version
+          echo "Image: ${{ steps.build_image.outputs.image }}"
+          echo "Tags: ${{ steps.build_image.outputs.tags }}"
+
+      # Run image to verify the build
+      - name: Run image
+        run: docker run ${{ env.IMAGE_NAME}}:latest
